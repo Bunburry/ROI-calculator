@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ReN PRIE — ROI Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="calculator.js"></script>
+<style>
+:root {
+  --bg:#070b1a; --bg-2:#0a1024; --panel:#0d1430; --panel-2:#111a3d;
+  --line:rgba(120,150,255,.14); --line-strong:rgba(120,150,255,.28);
+  --ink:#f3f5ff; --ink-2:#cdd4f0; --ink-3:#a3acd1;
+  --blue:#4f8aff; --blue-2:#7eaaff; --blue-soft:rgba(79,138,255,.14);
+  --coral:#ff6a5b; --green:#5ad6a0; --amber:#f5b942;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#04060f;color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:16px;min-height:100vh;}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;}
+.page{max-width:1180px;margin:0 auto;padding:32px 56px 56px;background:var(--bg);background-image:radial-gradient(1200px 600px at 80% -10%,rgba(58,123,255,.10),transparent 60%),radial-gradient(900px 500px at -10% 110%,rgba(58,123,255,.06),transparent 60%);border-left:1px solid var(--line);border-right:1px solid var(--line);}
+.topbar{display:flex;justify-content:space-between;align-items:stretch;border-top:1px solid var(--blue);padding-top:14px;gap:24px;}
+.topbar .l{display:flex;align-items:center;gap:18px;}
+.topbar .text-block{display:flex;flex-direction:column;justify-content:center;gap:6px;line-height:1.2;}
+.topbar .title{font-weight:600;letter-spacing:.18em;color:var(--ink);font-size:12px;margin:0;}
+.topbar .sub{color:var(--ink-2);font-size:11px;margin:0;}
+.topbar .r{text-align:right;color:var(--ink-2);display:flex;flex-direction:column;justify-content:center;gap:6px;line-height:1.2;font-size:12px;}
+.topbar .r .conf{color:var(--ink);font-weight:600;letter-spacing:.18em;font-size:12px;}
+.hero{margin-top:54px;display:grid;grid-template-columns:1.35fr 1fr;gap:40px;align-items:end;}
+.hero .tick{width:28px;height:2px;background:var(--blue);display:block;margin-bottom:18px;}
+h1.display{font-size:56px;line-height:1.02;margin:0;font-weight:700;letter-spacing:-.02em;}
+h1.display .blue{color:var(--blue-2);}
+.hero .lede{margin-top:22px;font-size:15px;line-height:1.65;color:var(--ink-2);max-width:560px;}
+.hero .lede b{color:var(--ink);font-weight:600;}
+.cta-card{border:1px solid var(--line-strong);border-radius:8px;padding:24px 26px;background:linear-gradient(180deg,rgba(58,123,255,.08),rgba(58,123,255,.02));position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;}
+.cta-card::before{content:"";position:absolute;inset:0;border-radius:8px;pointer-events:none;background:radial-gradient(400px 200px at 100% 0%,rgba(90,147,255,.18),transparent 60%);}
+.cta-card>*{position:relative;z-index:1;}
+.cta-card .label{font-size:11px;color:var(--blue-2);letter-spacing:.22em;font-weight:600;display:block;font-family:'JetBrains Mono',monospace;text-transform:uppercase;}
+.cta-card .price-num{font-size:48px;font-weight:700;margin:10px 0 4px;line-height:1;color:var(--ink);letter-spacing:-.02em;}
+.cta-card .price-num sup{font-size:20px;vertical-align:super;font-weight:600;color:var(--blue-2);}
+.cta-card .period{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-3);letter-spacing:.18em;text-transform:uppercase;margin-bottom:16px;}
+.cta-card .cdiv{height:1px;background:var(--line);width:100%;margin-bottom:14px;}
+.cta-card ul{list-style:none;display:flex;flex-direction:column;gap:7px;width:100%;}
+.cta-card ul li{font-size:12px;color:var(--ink-2);display:flex;align-items:flex-start;gap:8px;line-height:1.4;}
+.cta-card ul li::before{content:'✓';color:var(--green);font-size:11px;flex-shrink:0;margin-top:1px;font-weight:700;}
+.progress{margin-top:28px;display:flex;border-radius:6px;overflow:hidden;border:1px solid var(--line);}
+.prog-step{flex:1;padding:10px 8px 9px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);background:var(--panel);border-right:1px solid var(--line);user-select:none;transition:background .15s,color .15s;}
+.prog-step:last-child{border-right:none;}
+.prog-step .pn{display:block;font-size:9px;opacity:.5;margin-bottom:2px;letter-spacing:.16em;}
+.prog-step.active{background:var(--panel-2);color:var(--ink);}
+.prog-step.done{color:var(--green);}
+.calc-panel{margin-top:8px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);overflow:hidden;}
+.step{display:none;padding:32px 34px 28px;animation:fadeUp .2s ease both;}
+.step.show{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.step-title{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.015em;margin-bottom:6px;line-height:1.2;}
+.step-hint{font-size:13px;color:var(--ink-3);line-height:1.65;margin-bottom:24px;max-width:600px;}
+.opts{display:grid;gap:9px;margin-bottom:20px;}
+.opts.g2{grid-template-columns:1fr 1fr;}
+.opts.g1{grid-template-columns:1fr;}
+.opt{border:1px solid var(--line-strong);border-radius:8px;padding:14px 16px;cursor:pointer;background:var(--panel-2);transition:border-color .14s,background .14s,transform .1s;position:relative;user-select:none;}
+.opt:hover{border-color:var(--blue);background:rgba(79,138,255,.06);transform:translateY(-1px);}
+.opt.sel{border-color:var(--blue);background:rgba(79,138,255,.1);}
+.opt.sel::after{content:'✓';position:absolute;top:10px;right:12px;width:18px;height:18px;background:var(--blue);color:#fff;border-radius:50%;font-size:9px;display:grid;place-items:center;font-weight:700;}
+.opt-tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;padding:2px 7px;border-radius:4px;margin-bottom:5px;text-transform:uppercase;font-weight:500;}
+.tag-e{background:rgba(245,185,66,.12);color:var(--amber);}
+.tag-m{background:rgba(90,214,160,.1);color:var(--green);}
+.tag-s{background:var(--blue-soft);color:var(--blue-2);}
+.tag-d{background:rgba(180,130,255,.1);color:#c084fc;}
+.tag-x{background:rgba(255,106,91,.1);color:var(--coral);}
+.opt-title{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:3px;padding-right:20px;line-height:1.25;}
+.opt-sub{font-size:11.5px;color:var(--ink-3);line-height:1.5;}
+.opt-sub b{color:var(--ink-2);font-weight:500;}
+.task-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.task-row{display:flex;align-items:flex-start;gap:12px;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:8px;padding:14px 16px;cursor:pointer;transition:border-color .14s,background .14s,transform .1s;user-select:none;}
+.task-row:hover{border-color:var(--blue);transform:translateX(2px);}
+.task-row.sel{border-color:var(--blue);background:rgba(79,138,255,.07);}
+.task-chk{width:20px;height:20px;border-radius:5px;border:1px solid var(--line-strong);flex-shrink:0;display:grid;place-items:center;font-size:10px;color:transparent;transition:all .14s;margin-top:3px;}
+.task-row.sel .task-chk{background:var(--blue);border-color:var(--blue);color:#fff;}
+.task-body{flex:1;min-width:0;}
+.task-name{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:5px;line-height:1.3;}
+.task-times{display:flex;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
+.task-time-pill{font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 10px;border-radius:4px;letter-spacing:.04em;}
+.pill-manual{background:rgba(255,106,91,.12);color:var(--coral);border:1px solid rgba(255,106,91,.25);}
+.pill-prie{background:rgba(79,138,255,.12);color:var(--blue-2);border:1px solid rgba(79,138,255,.25);}
+.pill-save{background:rgba(90,214,160,.10);color:var(--green);font-weight:700;}
+.task-formula{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-3);margin-bottom:6px;line-height:1.7;background:rgba(120,150,255,.06);border-radius:4px;padding:6px 10px;border-left:2px solid var(--line-strong);}
+.task-formula b{color:var(--ink-2);}
+.task-citation{font-size:11px;color:var(--ink-3);line-height:1.6;margin-top:4px;}
+.task-citation a{color:var(--blue-2);text-decoration:underline;text-underline-offset:2px;}
+.cite-block{margin-top:16px;border:1px solid rgba(245,185,66,.25);border-left:3px solid var(--amber);border-radius:6px;background:rgba(245,185,66,.04);padding:14px 18px;}
+.cite-block .cite-head{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--amber);text-transform:uppercase;margin-bottom:10px;font-weight:600;}
+.cite-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);}
+.cite-row:last-child{border-bottom:none;}
+.cite-num{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--amber);font-weight:700;flex-shrink:0;padding-top:1px;min-width:26px;}
+.cite-text{flex:1;font-size:11.5px;line-height:1.65;color:var(--ink-2);}
+.cite-text a{color:var(--blue-2);text-decoration:underline;text-underline-offset:2px;}
+.cite-text b{color:var(--ink);font-weight:600;}
+.tip{position:relative;display:inline-flex;align-items:center;cursor:help;vertical-align:middle;}
+.tip-icon{width:14px;height:14px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:9px;color:var(--ink-3);font-style:normal;font-family:'JetBrains Mono',monospace;flex-shrink:0;line-height:1;}
+.tip-box{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--line-strong);border-radius:6px;padding:9px 11px;font-family:'Inter',sans-serif;font-size:11.5px;color:var(--ink-2);width:260px;z-index:200;line-height:1.55;pointer-events:none;display:none;box-shadow:0 4px 16px rgba(0,0,0,.5);}
+.tip:hover .tip-box,.tip:focus .tip-box{display:block;}
+.slider-block{margin-bottom:22px;}
+.sl-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+.sl-label{font-size:13px;color:var(--ink-2);font-weight:500;display:flex;align-items:center;gap:7px;}
+.sl-val{font-size:28px;font-weight:700;color:var(--blue-2);letter-spacing:-.02em;line-height:1;}
+.sl-val small{font-size:13px;color:var(--ink-3);font-weight:400;margin-left:4px;letter-spacing:0;}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--line-strong);border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue);border:3px solid var(--panel);box-shadow:0 0 0 2px var(--blue);cursor:pointer;transition:transform .12s;}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--blue);border:3px solid var(--panel);box-shadow:0 0 0 2px var(--blue);cursor:pointer;}
+.sl-ticks{display:flex;justify-content:space-between;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-3);letter-spacing:.05em;}
+.preview-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.pcard{border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--panel-2);}
+.pcard-lbl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px;}
+.pcard-val{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1;}
+.pcard-val.coral{color:var(--coral);}
+.pcard-val.amber{color:var(--amber);}
+.pcard-sub{font-size:11px;color:var(--ink-3);margin-top:4px;}
+.nav-row{display:flex;gap:10px;margin-top:4px;padding-top:20px;border-top:1px solid var(--line);}
+.btn-back{padding:10px 18px;border:1px solid var(--line-strong);border-radius:4px;background:transparent;color:var(--ink-3);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .14s;letter-spacing:.06em;}
+.btn-back:hover{color:var(--ink);border-color:var(--ink-3);}
+.btn-next{flex:1;padding:12px 20px;border:none;border-radius:4px;background:var(--blue);color:#fff;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:background .14s,transform .1s;letter-spacing:.16em;text-transform:uppercase;}
+.btn-next:hover{background:#6699ff;transform:translateY(-1px);}
+.btn-next:disabled{opacity:.3;cursor:not-allowed;transform:none;}
+/* Results */
+.results{display:none;animation:fadeUp .22s ease both;}
+.results.show{display:block;}
+.res-eyebrow{margin-top:28px;border-top:1px solid var(--blue);padding-top:14px;display:flex;justify-content:space-between;align-items:center;}
+.res-eyebrow .l{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.22em;color:var(--ink-2);text-transform:uppercase;font-weight:500;}
+.res-eyebrow .r{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--blue-2);text-transform:uppercase;}
+.roi-band{margin-top:14px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(180deg,rgba(58,123,255,.06),rgba(58,123,255,.01));padding:24px 28px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;}
+.roi-band .side{display:flex;flex-direction:column;}
+.roi-band .side.r{text-align:right;align-items:flex-end;}
+.roi-band .big{font-size:64px;font-weight:700;line-height:.95;letter-spacing:-.02em;}
+.roi-band .big .u{font-size:22px;color:var(--ink-2);font-weight:500;margin-left:4px;}
+.roi-band .big.green{color:var(--green);}
+.roi-band .big.amber{color:var(--amber);}
+.roi-band .lbl{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;color:var(--ink-2);margin-top:8px;}
+.roi-band .vs{color:var(--blue-2);font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;letter-spacing:.2em;display:grid;place-items:center;justify-self:center;padding:0 8px;position:relative;}
+.roi-band .vs::before,.roi-band .vs::after{content:"";position:absolute;top:50%;width:14px;height:1px;background:var(--line-strong);}
+.roi-band .vs::before{right:100%;margin-right:8px;}
+.roi-band .vs::after{left:100%;margin-left:8px;}
+.formula-panel{margin-top:14px;border:1px solid var(--line-strong);border-radius:8px;padding:20px 24px;background:rgba(79,138,255,.04);}
+.formula-panel .fp-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--blue-2);text-transform:uppercase;margin-bottom:12px;font-weight:600;}
+.formula-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.formula-item{padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:var(--panel);}
+.formula-item .fi-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px;}
+.formula-item .fi-eq{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink-2);line-height:1.8;}
+.formula-item .fi-eq b{color:var(--ink);}
+.formula-item .fi-note{font-size:11px;color:var(--ink-3);margin-top:6px;line-height:1.55;}
+.roi-caption{margin-top:14px;border:1px solid var(--line);border-left:4px solid var(--green);border-radius:6px;background:var(--panel-2);padding:20px 24px;font-size:15px;color:var(--ink);line-height:1.75;}
+.roi-caption b{color:var(--green);font-weight:700;}
+/* Sanity warning box */
+.sanity-warn{margin-top:10px;border:1px solid rgba(245,185,66,.4);border-left:3px solid var(--amber);border-radius:6px;background:rgba(245,185,66,.06);padding:14px 18px;font-size:12px;color:var(--amber);font-family:'JetBrains Mono',monospace;line-height:1.65;display:none;}
+.cost-3{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.cost-3 .c{border:1px solid var(--line);border-radius:8px;padding:20px 22px;background:var(--panel);}
+.cost-3 .c .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--ink-2);font-weight:500;}
+.cost-3 .c .num{font-size:42px;font-weight:700;letter-spacing:-.02em;margin:6px 0 8px;line-height:1;}
+.cost-3 .c .desc{font-size:12px;line-height:1.55;color:var(--ink-2);}
+.cost-3 .c .c-formula{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-3);margin-top:6px;line-height:1.6;border-top:1px solid var(--line);padding-top:6px;}
+.sec-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--ink-2);text-transform:uppercase;margin:22px 0 11px;font-weight:500;}
+.tab-row{display:flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden;margin-top:22px;}
+.tab-btn{flex:1;padding:11px 16px;background:var(--panel-2);border:none;color:var(--ink-3);font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .14s,color .14s;border-right:1px solid var(--line);}
+.tab-btn:last-child{border-right:none;}
+.tab-btn.active{background:var(--panel);color:var(--ink);font-weight:500;}
+.tab-content{display:none;margin-top:14px;}
+.tab-content.active{display:block;animation:fadeUp .18s ease both;}
+.chart-panel{border:1px solid var(--line);border-radius:8px;padding:18px 20px;background:var(--panel);margin-bottom:12px;}
+.chart-legend{display:flex;gap:18px;margin-bottom:12px;flex-wrap:wrap;}
+.leg-item{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-3);letter-spacing:.06em;}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.bk-wrap{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:18px 20px;margin-bottom:12px;overflow-x:auto;}
+.bk-table{width:100%;border-collapse:collapse;font-size:13px;}
+.bk-table th{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.13em;color:var(--ink-3);text-transform:uppercase;padding:0 14px 10px 0;text-align:left;border-bottom:1px solid var(--line);}
+.bk-table td{padding:10px 14px 10px 0;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:middle;}
+.bk-table tr:last-child td{border-bottom:none;font-weight:600;color:var(--ink);}
+.bk-table td.mc{color:var(--coral);font-family:'JetBrains Mono',monospace;font-size:12px;}
+.bk-table td.sc{color:var(--green);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;}
+.mini-bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:5px;}
+.mini-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--coral),#ff8b6e);}
+.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.risk-card{border:1px solid var(--line);border-radius:8px;padding:20px 22px;background:var(--panel);}
+.risk-card .rc-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.risk-card .rc-icon{width:28px;height:28px;border:1px solid var(--line-strong);border-radius:6px;display:grid;place-items:center;background:var(--blue-soft);font-size:13px;}
+.risk-card h4{margin:0;font-size:15px;font-weight:700;color:var(--ink);line-height:1.2;}
+.risk-card p{margin:0;font-size:12px;line-height:1.6;color:var(--ink-2);}
+.risk-card .rc-tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;padding:2px 7px;border-radius:4px;margin-bottom:6px;display:inline-block;text-transform:uppercase;}
+.method-toggle{width:100%;background:transparent;border:1px solid var(--line);border-radius:6px;padding:11px 16px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);cursor:pointer;transition:all .14s;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.method-toggle:hover{border-color:var(--line-strong);color:var(--ink-2);}
+.method-drawer{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:20px 22px;margin-bottom:8px;}
+.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.method-item h5{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--blue-2);text-transform:uppercase;margin-bottom:5px;}
+.method-item p{font-size:12px;color:var(--ink-3);line-height:1.62;}
+.method-full{font-size:11.5px;color:var(--ink-3);line-height:1.7;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+.method-full b{color:var(--ink-2);font-weight:500;}
+.demo{margin-top:22px;border-radius:14px;padding:28px 32px;background:linear-gradient(180deg,#1f3aaf 0%,#2d57d8 100%);display:grid;grid-template-columns:1fr auto;gap:32px;align-items:stretch;color:#fff;box-shadow:0 8px 40px rgba(31,58,175,.35);}
+.demo .left{display:flex;flex-direction:column;justify-content:space-between;gap:16px;}
+.demo .left .q{font-size:18px;font-weight:600;line-height:1.3;color:#fff;letter-spacing:-.01em;}
+.demo .left .ddiv{height:1px;background:rgba(255,255,255,.25);}
+.demo .left .body{font-size:14px;line-height:1.55;color:rgba(255,255,255,.92);}
+.demo .left .body a{color:#fff;text-decoration:underline;text-underline-offset:3px;}
+.demo .right{display:flex;align-items:center;}
+.demo .right .btn{background:#0a2470;color:#fff;font-weight:600;font-size:13px;padding:18px 24px;border-radius:8px;line-height:1.3;display:inline-flex;justify-content:center;text-align:center;flex-direction:column;align-items:center;gap:2px;min-width:110px;border:1px solid rgba(255,255,255,.12);transition:background .2s;text-decoration:none;}
+.demo .right .btn:hover{background:#0d2d8a;}
+.restart-btn{width:100%;background:transparent;border:1px solid var(--line-strong);border-radius:6px;padding:10px 18px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);cursor:pointer;transition:all .14s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:7px;}
+.restart-btn:hover{color:var(--ink);border-color:var(--ink-3);}
+.foot{margin-top:38px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid var(--line);padding-top:14px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-2);text-transform:uppercase;}
+.foot p{max-width:820px;line-height:1.6;}
+.foot .pg{font-size:11px;color:var(--ink-3);flex-shrink:0;}
+/* Capacity notice */
+.cap-notice{margin-top:10px;border:1px solid rgba(79,138,255,.3);border-radius:6px;background:rgba(79,138,255,.06);padding:10px 14px;font-size:11.5px;color:var(--blue-2);font-family:'JetBrains Mono',monospace;line-height:1.6;display:none;}
+@media(max-width:860px){
+  .page{padding:24px 20px 48px;}
+  .hero{grid-template-columns:1fr;gap:28px;}
+  h1.display{font-size:40px;}
+  .step{padding:24px 20px 20px;}
+  .opts.g2{grid-template-columns:1fr;}
+  .cost-3{grid-template-columns:1fr 1fr;}
+  .risk-grid{grid-template-columns:1fr 1fr;}
+  .method-grid{grid-template-columns:1fr;}
+  .roi-band{grid-template-columns:1fr;gap:10px;}
+  .roi-band .vs{display:none;}
+  .demo{grid-template-columns:1fr;}
+  .progress{display:none;}
+  .formula-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<main class="page">
+
+<div style="margin-top:22px;border:1px solid rgba(79,138,255,.2);border-left:3px solid var(--blue);border-radius:6px;background:rgba(79,138,255,.04);padding:14px 18px;font-size:12px;color:var(--ink-2);line-height:1.65;">
+  <b style="color:var(--blue-2)">How this works.</b> Answer five questions about your firm. The calculator models your team's annual hours across selected research tasks, prices them at your compensation band, and shows the net saving versus the PRIE annual fee. Every time benchmark and salary figure links directly to its published source.
+</div>
+
+<div class="progress" id="prog">
+  <div class="prog-step active" data-s="0"><span class="pn">01</span>AUM</div>
+  <div class="prog-step" data-s="1"><span class="pn">02</span>Team</div>
+  <div class="prog-step" data-s="2"><span class="pn">03</span>Salary</div>
+  <div class="prog-step" data-s="3"><span class="pn">04</span>Tasks</div>
+  <div class="prog-step" data-s="4"><span class="pn">05</span>Volume</div>
+  <div class="prog-step" data-s="5"><span class="pn">06</span>Results</div>
+</div>
+
+<div class="calc-panel" id="calc-panel">
+
+<!-- STEP 0 — AUM -->
+<div class="step show" id="p0">
+  <div class="step-title">Select your firm's Assets Under Management (AUM)</div>
+  <p class="step-hint">AUM size determines typical portfolio volume and review frequency. Defaults reflect published industry data on SEC-registered advisers.</p>
+  <div class="opts g2">
+    <div class="opt" data-g="aum" data-v="under500m" data-label="Under $500M AUM" data-vol="10" data-cyc="2" data-feepct="0.006" onclick="pickAUM(this)">
+      <div class="opt-tag tag-e">Boutique / Emerging</div>
+      <div class="opt-title">Under $500M AUM</div>
+      <div class="opt-sub">Boutique RIAs, single-family offices, emerging managers<br><b>Default: 10 portfolios · 2× / year</b></div>
+    </div>
+    <div class="opt" data-g="aum" data-v="500m1b" data-label="$500M – $1B AUM" data-vol="20" data-cyc="2" data-feepct="0.003" onclick="pickAUM(this)">
+      <div class="opt-tag tag-m">Growing</div>
+      <div class="opt-title">$500M – $1B AUM</div>
+      <div class="opt-sub">Established RIAs, boutique asset managers<br><b>Default: 20 portfolios · 2–4× / year</b></div>
+    </div>
+    <div class="opt" data-g="aum" data-v="1b5b" data-label="$1B – $5B AUM" data-vol="40" data-cyc="4" data-feepct="0.0015" onclick="pickAUM(this)">
+      <div class="opt-tag tag-s">Institutional</div>
+      <div class="opt-title">$1B – $5B AUM</div>
+      <div class="opt-sub">Mid-size asset managers, multi-family offices<br><b>Default: 40 portfolios · 4× / year</b></div>
+    </div>
+    <div class="opt" data-g="aum" data-v="5b10b" data-label="$5B – $10B AUM" data-vol="80" data-cyc="4" data-feepct="0.0005" onclick="pickAUM(this)">
+      <div class="opt-tag tag-d">Enterprise</div>
+      <div class="opt-title">$5B – $10B AUM</div>
+      <div class="opt-sub">Large institutional asset managers, pension providers<br><b>Default: 80 portfolios · 4–6× / year</b></div>
+    </div>
+  </div>
+  <div class="cite-block">
+    <div class="cite-head">Sources — AUM tier &amp; firm-size benchmarks</div>
+    <div class="cite-row"><div class="cite-num">[1]</div><div class="cite-text"><b>Investment Adviser Association &amp; COMPLY — Investment Adviser Industry Snapshot 2025 (data year 2024, published May 2025)</b>: "93% employ no more than 100 people … 68.5% of firms manage less than $1 billion AUM and 87.8% manage less than $5 billion. The median firm has just eight employees, two offices, and manages $393 million." — <a href="https://www.investmentnews.com/ria-news/industry-snapshot-more-advisors-more-clients-1446t-aum/260706" target="_blank">investmentnews.com — Industry snapshot: More advisors, more clients, $144.6T AUM</a> · IAA Snapshots index: <a href="https://www.investmentadviser.org/industry-snapshots/" target="_blank">investmentadviser.org/industry-snapshots/</a></div></div>
+    <div class="cite-row"><div class="cite-num">[2]</div><div class="cite-text"><b>Cerulli Associates — U.S. RIA Marketplace 2023</b>: "RIAs on average employ just four employees … Mega-team RIAs, those with above $500 million in AUM, employ 11 advisors and staff overall … over half (53%) of billion-dollar RIAs have five or more specialized staff." — <a href="https://www.cerulli.com/reports/us-ria-marketplace-2023" target="_blank">cerulli.com/reports/us-ria-marketplace-2023</a></div></div>
+    <div class="cite-row"><div class="cite-num">[3]</div><div class="cite-text"><b>IAA / InvestmentNews — 2024 Snapshot</b>: "58.3% of advisors have AUM between $100M and $1B, and 87.7% have fewer than 50 employees." — <a href="https://www.investmentnews.com/ria-news/industry-snapshot-more-advisors-more-clients-1446t-aum/260706" target="_blank">investmentnews.com — Industry snapshot, June 2025</a></div></div>
+  </div>
+  <div class="nav-row"><button class="btn-next" id="n0" onclick="go(1)" disabled>Continue →</button></div>
+</div>
+
+<!-- STEP 1 — Team -->
+<div class="step" id="p1">
+  <div class="step-title">How many analysts work on investment research?</div>
+  <p class="step-hint">Include only those directly performing portfolio research, filing review, due diligence, or risk monitoring — not operations or client-service staff.</p>
+  <div class="opts g2">
+    <div class="opt" data-g="team" data-v="1" data-label="1 analyst" onclick="pick(this)"><div class="opt-title">Solo analyst</div><div class="opt-sub">Boutique RIAs and single-family offices typically below $300M AUM. Generalist covering research, monitoring, and diligence end-to-end.</div></div>
+    <div class="opt" data-g="team" data-v="2.5" data-label="2–3 analysts" onclick="pick(this)"><div class="opt-title">2–3 analysts</div><div class="opt-sub">Typical for established RIAs and boutique asset managers ($300M–$1B AUM). Cerulli [2]: median RIA employs 3 professional staff.</div></div>
+    <div class="opt" data-g="team" data-v="5" data-label="4–6 analysts" onclick="pick(this)"><div class="opt-title">4–6 analysts</div><div class="opt-sub">Mid-size family offices and growing institutional managers ($1B–$3B AUM). Cerulli [2]: 53% of billion-dollar RIAs employ 5+ specialized staff.</div></div>
+    <div class="opt" data-g="team" data-v="8.5" data-label="7–10 analysts" onclick="pick(this)"><div class="opt-title">7–10 analysts</div><div class="opt-sub">Larger institutional operations, multi-strategy or multi-asset managers ($3B–$10B AUM).</div></div>
+  </div>
+  <div class="cite-block">
+    <div class="cite-head">Sources — team sizing by AUM tier</div>
+    <div class="cite-row"><div class="cite-num">[2]</div><div class="cite-text"><b>Cerulli Associates — U.S. RIA Marketplace 2023, Exhibit 5.02</b>: "Currently, RIAs on average employ just four employees, including three professional staff and advisors, and a single client service or administrative staff … Mega-team RIAs … employ 11 advisors and staff overall." Report info: <a href="https://www.cerulli.com/reports/us-ria-marketplace-2023" target="_blank">cerulli.com/reports/us-ria-marketplace-2023</a></div></div>
+    <div class="cite-row"><div class="cite-num">[1]</div><div class="cite-text"><b>IAA 2024 Evolution of the RIA Industry</b>: "93% of firms employ no more than 100 people … the median firm has just eight employees." — <a href="https://www.sec.gov/data-research/statistics-data-visualizations/investment-adviser-statistics" target="_blank">sec.gov Investment Adviser Statistics 2024</a></div></div>
+  </div>
+  <div class="nav-row"><button class="btn-back" onclick="go(0)">← Back</button><button class="btn-next" id="n1" onclick="go(2)" disabled>Continue →</button></div>
+</div>
+
+<!-- STEP 2 — Salary -->
+<div class="step" id="p2">
+  <div class="step-title">Average analyst total compensation?</div>
+  <p class="step-hint">Select the band that reflects fully-loaded annual compensation — base plus typical bonus. All bands sourced directly from U.S. Bureau of Labor Statistics and CFA Institute survey data.</p>
+  <div class="opts g1">
+    <div class="opt" data-g="salary" data-v="57000" data-hr="27.40" data-label="$45–70K" onclick="pick(this)"><div class="opt-tag tag-e">Junior analyst</div><div class="opt-title">$45,000 – $70,000 / year &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-3)">→ $27.40 / hr</span></div><div class="opt-sub">Entry-level research analysts, junior associates · BLS 25th percentile for SOC 13-2051: <b>$62,410</b> (May 2024)</div></div>
+    <div class="opt" data-g="salary" data-v="85000" data-hr="40.87" data-label="$70–100K" onclick="pick(this)"><div class="opt-tag tag-m">Mid-level analyst</div><div class="opt-title">$70,000 – $100,000 / year &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-3)">→ $40.87 / hr</span></div><div class="opt-sub">Senior research analysts, portfolio associates · BLS median SOC 13-2051: <b>$101,350</b> (May 2024)</div></div>
+    <div class="opt" data-g="salary" data-v="125000" data-hr="60.10" data-label="$100–150K" onclick="pick(this)"><div class="opt-tag tag-s">Senior analyst</div><div class="opt-title">$100,000 – $150,000 / year &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-3)">→ $60.10 / hr</span></div><div class="opt-sub">Investment analysts at BLS median ($101,350); risk specialists at BLS median ($106,000); includes typical performance bonus</div></div>
+    <div class="opt" data-g="salary" data-v="200000" data-hr="96.15" data-label="$150–250K" onclick="pick(this)"><div class="opt-tag tag-d">Lead / VP</div><div class="opt-title">$150,000 – $250,000 / year &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-3)">→ $96.15 / hr</span></div><div class="opt-sub">Lead analysts, VPs of research, portfolio risk directors · BLS 90th percentile: <b>$180,550+</b> (May 2024)</div></div>
+    <div class="opt" data-g="salary" data-v="300000" data-hr="144.23" data-label="$250K+" onclick="pick(this)"><div class="opt-tag tag-x">Managing Director</div><div class="opt-title">$250,000+ / year &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-3)">→ $144.23 / hr</span></div><div class="opt-sub">Senior directors, MDs, senior PMs at large institutional managers</div></div>
+  </div>
+  <div class="cite-block">
+    <div class="cite-head">Sources — salary benchmarks</div>
+    <div class="cite-row"><div class="cite-num">[4]</div><div class="cite-text"><b>U.S. Bureau of Labor Statistics — OEWS May 2024, SOC 13-2051 (Financial and Investment Analysts)</b>: "The median annual wage for financial and investment analysts was $101,350 in May 2024. The lowest 10 percent earned less than $62,410, and the highest 10 percent earned more than $180,550." — <a href="https://www.bls.gov/ooh/business-and-financial/financial-analysts.htm" target="_blank">bls.gov/ooh/business-and-financial/financial-analysts.htm</a></div></div>
+    <div class="cite-row"><div class="cite-num">[5]</div><div class="cite-text"><b>U.S. Bureau of Labor Statistics — OEWS May 2024, SOC 13-2054 (Financial Risk Specialists)</b>: "The median annual wage for financial risk specialists was $106,000 in May 2024." — <a href="https://www.bls.gov/ooh/business-and-financial/financial-analysts.htm" target="_blank">bls.gov/ooh/business-and-financial/financial-analysts.htm</a></div></div>
+    <div class="cite-row"><div class="cite-num">[6]</div><div class="cite-text"><b>CFA Institute — 2024 Compensation Study, Executive Summary (data year: 2023)</b>: Survey of 17,358 CFA members across 132 markets. Portfolio manager emerges as the most frequently held role. The Americas region has the highest compensation. Full PDF: <a href="https://rnd-cfa-portal.prod.eks.dynata.com/summary-reports/2024/Executive%20Summary%202024%20-%20Global.pdf" target="_blank">CFA Institute Compensation Study 2024 — Executive Summary PDF</a></div></div>
+    <div class="cite-row"><div class="cite-num">Formula</div><div class="cite-text"><b>Hourly rate calculation:</b> Annual salary ÷ 2,080 hours (BLS standard: 52 weeks × 40 hours/week). Example for $100–150K band: midpoint $125,000 ÷ 2,080 = <b>$60.10 / hr</b>.</div></div>
+  </div>
+  <div class="nav-row"><button class="btn-back" onclick="go(1)">← Back</button><button class="btn-next" id="n2" onclick="go(3)" disabled>Continue →</button></div>
+</div>
+
+<!-- STEP 3 — Tasks -->
+<div class="step" id="p3">
+  <div class="step-title">Which tasks does your team perform manually?</div>
+  <p class="step-hint">Select all that apply. Hours are calculated per analyst where each person does the task independently, or as a shared team output where one deliverable serves the team. PRIE-assisted times always include mandatory human review.</p>
+  <div class="task-list">
+
+    <!-- Filing / ODD / IDD — per analyst (each analyst reviews their own set) -->
+    <div class="task-row" data-task="filings" data-hrs="4" data-renhrs="0.75" data-scope="analyst" onclick="toggleTask(this)">
+      <div class="task-chk">✓</div>
+      <div class="task-body">
+        <div class="task-name">Annual filing reviews &amp; ODD / IDD reports</div>
+        <div class="task-times">
+          <span class="task-time-pill pill-manual">Manual: 4 hrs / portfolio / analyst</span>
+          <span class="task-time-pill pill-prie">PRIE-assisted: 45 min / portfolio / analyst</span>
+          <span class="task-time-pill pill-save">−81% time reduction</span>
+        </div>
+        <div class="task-formula">
+          Annual manual hrs = <b>4 hrs/portfolio</b> × <b>[portfolios]</b> × <b>[review cycles/yr]</b> × <b>[analysts]</b><br>
+          Annual PRIE hrs &nbsp; = <b>0.75 hrs/portfolio</b> × <b>[portfolios]</b> × <b>[review cycles/yr]</b> × <b>[analysts]</b><br>
+          Scope: Each analyst independently reviews a subset of portfolios (hrs scale with team size).
+        </div>
+        <div class="task-citation">
+          Source [7]: SBAI — "The ODD process involves a desktop review of documents collected in advance, onsite visit(s), and follow up verifications." <a href="https://www.sbai.org/resource/guidance-on-preparing-for-odd.html" target="_blank">sbai.org/resource/guidance-on-preparing-for-odd.html</a><br>
+          Source [8]: Creative Planning / CAIA — "A thorough alternative investment due diligence checklist … often contains 50–100 verification points." 3–5 hrs for the document-extraction phase is the practitioner estimate. <b>4 hrs is the midpoint.</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- IC Dossier — SHARED output: one memo per portfolio, split across team -->
+    <div class="task-row" data-task="ic" data-hrs="8" data-renhrs="1.5" data-scope="team" onclick="toggleTask(this)">
+      <div class="task-chk">✓</div>
+      <div class="task-body">
+        <div class="task-name">IC dossier &amp; investment memo preparation</div>
+        <div class="task-times">
+          <span class="task-time-pill pill-manual">Manual: 8 hrs / report (team total)</span>
+          <span class="task-time-pill pill-prie">PRIE-assisted: 1.5 hrs / report (team total)</span>
+          <span class="task-time-pill pill-save">−81% time reduction</span>
+        </div>
+        <div class="task-formula">
+          Annual manual hrs = <b>8 hrs/portfolio</b> × <b>[portfolios]</b> × <b>[review cycles/yr]</b><br>
+          Annual PRIE hrs &nbsp; = <b>1.5 hrs/portfolio</b> × <b>[portfolios]</b> × <b>[review cycles/yr]</b><br>
+          Scope: One IC memo per portfolio — team collaborates. Hours are NOT multiplied by headcount.<br>
+          Note: 8 hrs is the conservative lower bound for AM. PE deal memos average 12–15 hrs [10].
+        </div>
+        <div class="task-citation">
+          Source [9]: Build.inc (March 2026) — "This section used to require four to six hours of analyst time … IC prep time dropping from three to four days to six to eight hours." <a href="https://build.inc/insights/investment-committee-memo-automation-ai" target="_blank">build.inc/insights/investment-committee-memo-automation-ai</a><br>
+          Source [10]: Agentman (March 2026) — "IC memo prep typically consumed 12 to 15 hours of senior associate time per deal." <a href="https://agentman.ai/blog/ic-memo-that-wrote-itself" target="_blank">agentman.ai/blog/ic-memo-that-wrote-itself</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Benchmarking — SHARED output: one benchmarking report per portfolio -->
+    <div class="task-row" data-task="benchmark" data-hrs="5" data-renhrs="0.75" data-scope="team" onclick="toggleTask(this)">
+      <div class="task-chk">✓</div>
+      <div class="task-body">
+        <div class="task-name">Benchmarking &amp; peer comparison</div>
+        <div class="task-times">
+          <span class="task-time-pill pill-manual">Manual: 5 hrs / portfolio (team total)</span>
+          <span class="task-time-pill pill-prie">PRIE-assisted: 45 min / portfolio (team total)</span>
+          <span class="task-time-pill pill-save">−85% time reduction</span>
+        </div>
+        <div class="task-formula">
+          Annual manual hrs = <b>5 hrs/portfolio</b> × <b>[portfolios]</b> × <b>[review cycles/yr]</b><br>
+          Annual PRIE hrs &nbsp; = <b>0.75 hrs/portfolio</b> × <b>[portfolios]</b> × <b>[review cycles/yr]</b><br>
+          Scope: One benchmarking report per portfolio — shared team output. Hours are NOT multiplied by headcount.
+        </div>
+        <div class="task-citation">
+          Source [11]: ArXiv 2025 — "The process to set [Capital Market Assumptions] involves loading market data, computing historical statistics, assessing the macro environment … a process that takes hours per asset class." <a href="https://arxiv.org/pdf/2604.02279" target="_blank">arxiv.org/pdf/2604.02279</a> — 5 hrs is a conservative estimate for benchmarking one portfolio against peers.
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk Surveillance — per analyst -->
+    <div class="task-row" data-task="surveillance" data-hrs="2" data-renhrs="0.33" data-scope="analyst" onclick="toggleTask(this)">
+      <div class="task-chk">✓</div>
+      <div class="task-body">
+        <div class="task-name">Ongoing risk surveillance &amp; monitoring</div>
+        <div class="task-times">
+          <span class="task-time-pill pill-manual">Manual: 2 hrs / portfolio / analyst / cycle</span>
+          <span class="task-time-pill pill-prie">PRIE-assisted: 20 min / portfolio / analyst / cycle</span>
+          <span class="task-time-pill pill-save">−83% time reduction</span>
+        </div>
+        <div class="task-formula">
+          Annual manual hrs = <b>2 hrs/portfolio</b> × <b>[portfolios]</b> × <b>[review cycles/yr]</b> × <b>[analysts]</b><br>
+          Annual PRIE hrs &nbsp; = <b>0.33 hrs/portfolio</b> × <b>[portfolios]</b> × <b>[review cycles/yr]</b> × <b>[analysts]</b><br>
+          Scope: Between-cycle monitoring — each analyst reviews their own assigned holdings.
+        </div>
+        <div class="task-citation">
+          Source [12]: SBAI — 2024 ODD Practices Survey. <a href="https://www.sbai.org/resource/sbai-2024-operational-due-diligence-practices-survey.html" target="_blank">sbai.org/resource/sbai-2024-operational-due-diligence-practices-survey.html</a><br>
+          Source [11]: ArXiv 2025 — "The portfolio is monitored and periodically rebalanced … The entire cycle runs quarterly or semi-annually. The breadth of analysis is constrained by staffing." 2 hrs per portfolio per cycle is a conservative estimate for between-cycle risk review.
+        </div>
+      </div>
+    </div>
+
+    <!-- News Monitoring — per analyst, daily, NOT per portfolio/cycle -->
+    <div class="task-row" data-task="news" data-hrs-daily="1.5" data-scope="analyst" data-special="daily" onclick="toggleTask(this)">
+      <div class="task-chk">✓</div>
+      <div class="task-body">
+        <div class="task-name">News flow, earnings &amp; daily market monitoring</div>
+        <div class="task-times">
+          <span class="task-time-pill pill-manual">Manual: 1.5 hrs / analyst / trading day</span>
+          <span class="task-time-pill pill-prie">PRIE-assisted: 15 min / analyst / trading day</span>
+          <span class="task-time-pill pill-save">−83% time reduction</span>
+        </div>
+        <div class="task-formula">
+          Annual manual hrs = <b>1.5 hrs/day</b> × <b>240 trading days</b> × <b>[analysts]</b> = <b>[analysts × 360 hrs/yr]</b><br>
+          Annual PRIE hrs &nbsp; = <b>0.25 hrs/day</b> × <b>240 trading days</b> × <b>[analysts]</b> = <b>[analysts × 60 hrs/yr]</b><br>
+          Note: Continuous daily task — NOT multiplied by review cycle count or portfolio count.
+        </div>
+        <div class="task-citation">
+          Source [13]: McKinsey Global Institute — "The Social Economy" (July 2012): knowledge workers spend roughly <b>20% of their workweek searching for and gathering information</b> (≈ 1.6 hrs/day in a 40-hr week). <a href="https://www.mckinsey.com/industries/technology-media-and-telecommunications/our-insights/the-social-economy" target="_blank">mckinsey.com/industries/…/the-social-economy</a><br>
+          1.5 hrs/day is deliberately set <b>below</b> the McKinsey baseline of 1.6–1.8 hrs/day to remain conservative.
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div style="margin-top:12px;border:1px solid rgba(57,255,126,.3);border-left:3px solid #39ff7e;border-radius:6px;background:rgba(57,255,126,.05);padding:12px 16px;font-size:12px;color:#39ff7e;font-family:'JetBrains Mono',monospace;letter-spacing:.10em;font-weight:500">PRIE-assisted times include human review and sign-off — PRIE generates; the analyst validates and approves.</div>
+  <div class="nav-row"><button class="btn-back" onclick="go(2)">← Back</button><button class="btn-next" id="n3" onclick="go(4)" disabled>Continue →</button></div>
+</div>
+
+<!-- STEP 4 — Volume -->
+<div class="step" id="p4">
+  <div class="step-title">Portfolio volume &amp; review frequency</div>
+  <p class="step-hint">These two sliders directly multiply analyst hours and drive the savings calculation. Defaults are pre-set from your AUM tier in Step 1. Adjust to your actual workflow.</p>
+  <div class="slider-block">
+    <div class="sl-header"><span class="sl-label">Portfolios reviewed annually</span><div class="sl-val" id="vol-disp">10<small>portfolios / yr</small></div></div>
+    <input type="range" min="1" max="150" value="10" step="1" id="vol-sl" oninput="onVol(this.value)">
+    <div class="sl-ticks"><span>1</span><span>25</span><span>50</span><span>100</span><span>150</span></div>
+  </div>
+  <div class="slider-block">
+    <div class="sl-header">
+      <span class="sl-label">Formal review cycles per portfolio / year</span>
+      <div class="sl-val" id="cyc-disp">2<small>× / year</small></div>
+    </div>
+    <input type="range" min="1" max="12" value="2" step="1" id="cyc-sl" oninput="onCyc(this.value)">
+    <div class="sl-ticks"><span>Annual (1×)</span><span>Semi-annual (2×)</span><span>Quarterly (4×)</span><span>Monthly (12×)</span></div>
+  </div>
+  <div class="preview-row">
+    <div class="pcard"><div class="pcard-lbl mono">Estimated manual hrs / year</div><div class="pcard-val coral" id="prev-hrs">—</div><div class="pcard-sub">across selected tasks &amp; team</div></div>
+    <div class="pcard"><div class="pcard-lbl mono">Est. annual labor cost</div><div class="pcard-val amber" id="prev-cost">—</div><div class="pcard-sub">at selected compensation band</div></div>
+  </div>
+  <div class="cap-notice" id="cap-notice">⚠ Capacity ceiling applied — hours scaled to 80% utilisation (1,664 hrs/analyst/yr). This prevents the model from claiming more hours than analysts can realistically work.</div>
+  <div class="cite-block">
+    <div class="cite-head">Sources — review frequency benchmarks</div>
+    <div class="cite-row"><div class="cite-num">[11]</div><div class="cite-text"><b>ArXiv 2025 — "The Self Driving Portfolio: Agentic Architecture for Institutional Asset Management"</b>: "The investment committee reviews one recommended portfolio, typically with a sensitivity analysis. The entire cycle runs <b>quarterly or semi-annually</b>. The breadth of analysis is constrained by staffing … and the frequency of review is constrained by committee calendars." — <a href="https://arxiv.org/pdf/2604.02279" target="_blank">arxiv.org/pdf/2604.02279</a></div></div>
+    <div class="cite-row"><div class="cite-num">[12]</div><div class="cite-text"><b>SBAI — 2024 ODD Practices Survey</b>: Describes ongoing portfolio monitoring as a core institutional investor function, with structured review cycles as standard practice. — <a href="https://www.sbai.org/resource/sbai-2024-operational-due-diligence-practices-survey.html" target="_blank">sbai.org/resource/sbai-2024-operational-due-diligence-practices-survey.html</a></div></div>
+  </div>
+  <div style="font-size:11px;color:var(--ink-3);font-family:'JetBrains Mono',monospace;line-height:1.65;letter-spacing:.04em;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">News monitoring annualised at 240 trading days × analyst headcount — not multiplied by portfolio count or review cycle count [13].</div>
+  <div class="nav-row"><button class="btn-back" onclick="go(3)">← Back</button><button class="btn-next" id="n4" onclick="calcROI()">Calculate ROI →</button></div>
+</div>
+
+</div><!-- /calc-panel -->
+
+<!-- ══════ RESULTS ══════ -->
+<div class="results" id="p5">
+
+  <div class="res-eyebrow">
+    <div class="l mono upper">ROI Estimate · ReN PRIE</div>
+    <div class="r mono upper">Conservative Estimate · Labor Cost Only · Benchmark-Verified</div>
+  </div>
+
+  <div class="roi-band">
+    <div class="side">
+      <div class="lbl mono upper">Estimated Annual ROI</div>
+      <div class="big green" id="roi-big">—<span class="u">%</span></div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="side r">
+      <div class="lbl mono upper">Payback Period</div>
+      <div class="big" id="pb-val" style="font-size:48px;color:var(--blue-2)">—</div>
+    </div>
+  </div>
+
+  <div class="sanity-warn" id="sanity-warn"></div>
+  <div class="roi-caption" id="roi-caption">—</div>
+
+  <div id="aum-context" style="display:none;margin-top:10px;padding:12px 18px;border:1px solid rgba(79,138,255,.2);border-radius:6px;background:rgba(79,138,255,.05);font-size:13px;color:var(--ink-2);line-height:1.6"></div>
+
+  <div id="what-you-get" style="display:flex;flex-direction:column;gap:10px;margin-top:18px;margin-bottom:4px"></div>
+
+  <div class="cost-3">
+    <div class="c">
+      <div class="lbl mono">Manual labor cost</div>
+      <div class="num"><span style="color:var(--coral)" id="r-manual">—</span></div>
+      <div class="desc">Annual cost of selected tasks at your team's hourly rate</div>
+      <div class="c-formula" id="c-formula-manual">formula loading…</div>
+    </div>
+    <div class="c">
+      <div class="lbl mono">PRIE-assisted total cost</div>
+      <div class="num"><span style="color:var(--blue-2)" id="r-assisted">—</span></div>
+      <div class="desc">Remaining review time cost + $30,000 annual PRIE fee</div>
+      <div class="c-formula" id="c-formula-prie">formula loading…</div>
+    </div>
+    <div class="c">
+      <div class="lbl mono">Net annual savings</div>
+      <div class="num"><span style="color:var(--green)" id="r-savings">—</span></div>
+      <div class="desc">Labor cost reclaimed after full PRIE fee</div>
+      <div class="c-formula" id="c-formula-savings">formula loading…</div>
+    </div>
+  </div>
+
+  <!-- Full formula panel -->
+  <div class="formula-panel">
+    <div class="fp-label">Complete ROI formula — applied to your inputs</div>
+    <div class="formula-grid">
+      <div class="formula-item">
+        <div class="fi-label">Manual labor cost</div>
+        <div class="fi-eq" id="fi-manual">—</div>
+        <div class="fi-note">Sum of all selected tasks × hourly rate</div>
+      </div>
+      <div class="formula-item">
+        <div class="fi-label">PRIE-assisted total cost</div>
+        <div class="fi-eq" id="fi-prie">—</div>
+        <div class="fi-note">Remaining review labor + $30K annual fee</div>
+      </div>
+      <div class="formula-item">
+        <div class="fi-label">Net savings</div>
+        <div class="fi-eq" id="fi-savings">—</div>
+      </div>
+      <div class="formula-item">
+        <div class="fi-label">ROI — correct formula</div>
+        <div class="fi-eq" id="fi-roi">—</div>
+        <div class="fi-note">ROI = Net savings ÷ <b>Total PRIE cost</b> × 100. Denominator is the full PRIE investment (review labor + fee), not just the fee alone. Hourly rate = Annual salary ÷ 2,080 hrs (BLS). 80% utilisation cap applied.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="switchTab('labor',this)">Labor breakdown</button>
+    <button class="tab-btn" onclick="switchTab('risk',this)">Risk &amp; strategic value</button>
+    <button class="tab-btn" onclick="switchTab('citations',this)">All citations</button>
+  </div>
+
+  <!-- TAB: LABOR -->
+  <div class="tab-content active" id="tab-labor">
+    <div class="sec-label mono upper">Cost comparison — manual vs PRIE-assisted</div>
+    <div class="chart-panel">
+      <div class="chart-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#c0534a"></div>Manual analyst work</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#2b8fcc"></div>PRIE-assisted (review only)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#3a7fd4"></div>ReN PRIE fee ($30K)</div>
+      </div>
+      <div style="position:relative;width:100%;height:220px"><canvas id="cmp-chart"></canvas></div>
+    </div>
+    <div class="sec-label mono upper">Hours reclaimed by task</div>
+    <div class="chart-panel">
+      <div class="chart-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#c0534a"></div>Manual hours / yr</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#3a7fd4"></div>PRIE-assisted hours / yr</div>
+      </div>
+      <div style="position:relative;width:100%" id="hrs-wrap"><canvas id="hrs-chart"></canvas></div>
+    </div>
+    <div class="sec-label mono upper">Task-by-task breakdown</div>
+    <div class="bk-wrap">
+      <table class="bk-table">
+        <thead><tr><th>Task</th><th>Scope</th><th>Manual hrs / yr</th><th>Labor cost</th><th>PRIE hrs / yr</th><th>Hrs saved</th></tr></thead>
+        <tbody id="bk-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: RISK -->
+  <div class="tab-content" id="tab-risk">
+    <p style="font-size:13px;color:var(--ink-2);line-height:1.7;max-width:680px;margin-bottom:18px">The headline ROI figure covers analyst labor savings only. The value drivers below are additional benefits — shown here so you have the full picture when presenting to stakeholders.</p>
+    <div class="risk-grid">
+      <div class="risk-card"><div class="rc-top"><div class="rc-icon">🔍</div><div><div class="rc-tag" style="background:rgba(255,106,91,.1);color:var(--coral)">Risk avoidance</div><h4>Earlier detection of hidden exposure</h4></div></div><p>PRIE continuously monitors filings, disclosures, and market data between formal review cycles — surfacing issues before they compound.</p></div>
+      <div class="risk-card"><div class="rc-top"><div class="rc-icon">⚡</div><div><div class="rc-tag" style="background:var(--blue-soft);color:var(--blue-2)">Decision velocity</div><h4>Faster IC turnaround</h4></div></div><p>IC-ready dossiers in under an hour versus days enables faster response to market events, manager changes, or mandate reviews.</p></div>
+      <div class="risk-card"><div class="rc-top"><div class="rc-icon">📈</div><div><div class="rc-tag" style="background:rgba(90,214,160,.1);color:var(--green)">Scalable capacity</div><h4>Monitor more without hiring</h4></div></div><p>Manual processes concentrate coverage on largest holdings. PRIE enables structured analysis across the full portfolio between formal cycles.</p></div>
+      <div class="risk-card"><div class="rc-top"><div class="rc-icon">📋</div><div><div class="rc-tag" style="background:rgba(180,130,255,.1);color:#c084fc">Documentation quality</div><h4>Structured, source-linked outputs</h4></div></div><p>Every PRIE output includes source references and a structured narrative, making it straightforward to share internally, present to clients, and revisit during periodic reviews.</p></div>
+      <div class="risk-card"><div class="rc-top"><div class="rc-icon">🤝</div><div><div class="rc-tag" style="background:rgba(245,185,66,.12);color:var(--amber)">Client reporting</div><h4>Consistent structured reporting</h4></div></div><p>Hours freed from document parsing return to IC debate and client conversations. Institutional clients expect structured, consistent reporting at scale.</p></div>
+      <div class="risk-card"><div class="rc-top"><div class="rc-icon">⚖️</div><div><div class="rc-tag" style="background:rgba(90,214,160,.1);color:var(--green)">Process consistency</div><h4>Same standard across all holdings</h4></div></div><p>Manual workflows produce variable-quality diligence depending on analyst bandwidth. PRIE applies the same structured analysis to every portfolio and every cycle.</p></div>
+    </div>
+    <div style="margin-top:14px;border:1px solid var(--line-strong);border-radius:8px;padding:16px 20px;background:rgba(79,138,255,.04);font-size:12px;color:var(--ink-2);line-height:1.7"><b style="color:var(--blue-2)">On strategic value:</b> The benefits above are firm-specific and vary by portfolio size, mandate type, and team structure. They are shown separately to illustrate the broader picture — the headline ROI figure reflects labor cost savings only, keeping it concrete and directly verifiable.</div>
+  </div>
+
+  <!-- TAB: CITATIONS -->
+  <div class="tab-content" id="tab-citations">
+    <p style="font-size:13px;color:var(--ink-2);line-height:1.7;margin-bottom:18px">Every figure in this calculator is sourced from an independently published study or government dataset. Direct links to the original articles are provided below — not to company homepages.</p>
+    <div class="cite-block">
+      <div class="cite-head">Complete citation index</div>
+      <div class="cite-row"><div class="cite-num">[1]</div><div class="cite-text"><b>Investment Adviser Association &amp; COMPLY — Investment Adviser Industry Snapshot 2025 (data year 2024, published May 2025)</b>: "Most firms are relatively small, with 93% employing no more than 100 people … 68.5% of firms manage less than $1 billion AUM and 87.8% manage less than $5 billion. The median firm has just eight employees, two offices, and manages $393 million." — <a href="https://www.investmentnews.com/ria-news/industry-snapshot-more-advisors-more-clients-1446t-aum/260706" target="_blank">investmentnews.com — Industry snapshot: More advisors, more clients, $144.6T AUM</a> · IAA Snapshots index: <a href="https://www.investmentadviser.org/industry-snapshots/" target="_blank">investmentadviser.org/industry-snapshots/</a></div></div>
+      <div class="cite-row"><div class="cite-num">[2]</div><div class="cite-text"><b>Cerulli Associates — U.S. RIA Marketplace 2023, Exhibit 5.02</b>: "RIAs on average employ just four employees … Mega-team RIAs (&gt;$500M AUM) employ 11 staff overall … 53% of billion-dollar RIAs have 5+ specialized staff." Report available at: <a href="https://www.cerulli.com/reports/us-ria-marketplace-2023" target="_blank">cerulli.com/reports/us-ria-marketplace-2023</a> (subscription)</div></div>
+      <div class="cite-row"><div class="cite-num">[3]</div><div class="cite-text"><b>Investment Adviser Association &amp; COMPLY — Investment Adviser Industry Snapshot 2024</b>: "58.3% of advisors have AUM between $100M and $1B, and 87.7% have fewer than 50 employees." Direct report PDF: <a href="https://www.investmentadviser.org/wp-content/uploads/2024/06/Snapshot2024_FINAL.pdf" target="_blank">investmentadviser.org/wp-content/uploads/2024/06/Snapshot2024_FINAL.pdf</a></div></div>
+      <div class="cite-row"><div class="cite-num">[4]</div><div class="cite-text"><b>U.S. Bureau of Labor Statistics — OEWS May 2024, SOC 13-2051 (Financial and Investment Analysts)</b>: Median annual wage $101,350; 10th percentile $62,410; 90th percentile $180,550+. — <a href="https://www.bls.gov/ooh/business-and-financial/financial-analysts.htm" target="_blank">bls.gov/ooh/business-and-financial/financial-analysts.htm</a></div></div>
+      <div class="cite-row"><div class="cite-num">[5]</div><div class="cite-text"><b>U.S. Bureau of Labor Statistics — OEWS May 2024, SOC 13-2054 (Financial Risk Specialists)</b>: Median annual wage $106,000. — <a href="https://www.bls.gov/ooh/business-and-financial/financial-analysts.htm" target="_blank">bls.gov/ooh/business-and-financial/financial-analysts.htm</a></div></div>
+      <div class="cite-row"><div class="cite-num">[6]</div><div class="cite-text"><b>CFA Institute — 2024 Compensation Study Executive Summary (data year: 2023), August 2024</b>: Survey of 17,358 CFA members across 132 markets. Full PDF: <a href="https://rnd-cfa-portal.prod.eks.dynata.com/summary-reports/2024/Executive%20Summary%202024%20-%20Global.pdf" target="_blank">rnd-cfa-portal.prod.eks.dynata.com/…/Executive Summary 2024 - Global.pdf</a></div></div>
+      <div class="cite-row"><div class="cite-num">[7]</div><div class="cite-text"><b>SBAI — Guidance on Preparing for ODD</b>: "The ODD process involves a desktop review of documents collected in advance, onsite visit(s), and follow up verifications." — <a href="https://www.sbai.org/resource/guidance-on-preparing-for-odd.html" target="_blank">sbai.org/resource/guidance-on-preparing-for-odd.html</a></div></div>
+      <div class="cite-row"><div class="cite-num">[8]</div><div class="cite-text"><b>Creative Planning — The Importance of Conducting Due Diligence (2024)</b>: "A thorough alternative investment due diligence checklist is lengthy but should include … 50–100+ verification points." — <a href="https://creativeplanning.com/insights/investment/the-importance-of-conducting-due-diligence-before-investing-in-alternatives/" target="_blank">creativeplanning.com/insights/investment/…</a></div></div>
+      <div class="cite-row"><div class="cite-num">[9]</div><div class="cite-text"><b>Build.inc — "How to Automate an Investment Committee Memo with AI" (March 2026)</b>: "IC prep time dropping from three to four days to six to eight hours." — <a href="https://build.inc/insights/investment-committee-memo-automation-ai" target="_blank">build.inc/insights/investment-committee-memo-automation-ai</a></div></div>
+      <div class="cite-row"><div class="cite-num">[10]</div><div class="cite-text"><b>Agentman — "The IC Memo That Wrote Itself" (March 2026)</b>: "IC memo prep typically consumed 12 to 15 hours of senior associate time per deal." — <a href="https://agentman.ai/blog/ic-memo-that-wrote-itself" target="_blank">agentman.ai/blog/ic-memo-that-wrote-itself</a></div></div>
+      <div class="cite-row"><div class="cite-num">[11]</div><div class="cite-text"><b>ArXiv — "The Self Driving Portfolio: Agentic Architecture for Institutional Asset Management" (2025)</b>: "The process to set CMAs involves loading market data, computing historical statistics … The entire cycle runs quarterly or semi-annually." — <a href="https://arxiv.org/pdf/2604.02279" target="_blank">arxiv.org/pdf/2604.02279</a></div></div>
+      <div class="cite-row"><div class="cite-num">[12]</div><div class="cite-text"><b>SBAI — 2024 ODD Practices Survey</b>: Standard practices at leading investors across structures, data gathering tools, and challenges. — <a href="https://www.sbai.org/resource/sbai-2024-operational-due-diligence-practices-survey.html" target="_blank">sbai.org/resource/sbai-2024-operational-due-diligence-practices-survey.html</a></div></div>
+      <div class="cite-row"><div class="cite-num">[13]</div><div class="cite-text"><b>McKinsey Global Institute — "The Social Economy" (July 2012)</b>: Knowledge workers spend approximately 20% of their working week (≈1.6–1.8 hrs/day) searching for and gathering information. 1.5 hrs/day used in this calculator is below the published baseline. — <a href="https://www.mckinsey.com/industries/technology-media-and-telecommunications/our-insights/the-social-economy" target="_blank">mckinsey.com/industries/…/the-social-economy</a></div></div>
+    </div>
+    <div class="cite-block" style="margin-top:12px;border-color:rgba(90,214,160,.3);">
+      <div class="cite-head" style="color:var(--green)">What is excluded from the ROI — and why</div>
+      <div style="font-size:12px;color:var(--ink-2);line-height:1.7;">
+        The headline ROI reflects direct analyst labor savings only — the most concrete and universally comparable measure. Additional value your team may see includes:<br><br>
+        <b style="color:var(--ink)">① Faster IC turnaround</b> — dossiers in hours rather than days, enabling quicker decisions.<br>
+        <b style="color:var(--ink)">② Opportunity cost of delayed IC decisions</b> — real but not generically quantifiable.<br>
+        <b style="color:var(--ink)">③ Data licensing costs</b> — included in PRIE fee, not double-counted.<br>
+        <b style="color:var(--ink)">④ Compliance or legal review costs</b> — vary by jurisdiction and firm structure.<br>
+        <b style="color:var(--ink)">⑤ Team retention effects</b> — directionally positive for analyst satisfaction; not quantified.<br><br>
+        The ROI shown covers analyst labor savings on the selected tasks only — additional value drivers are presented separately in the Risk &amp; Strategic Value tab.
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label mono upper" style="margin-top:22px">Methodology &amp; assumptions</div>
+  <div class="method-drawer" id="method-drawer" style="display:block">
+    <div class="method-grid">
+      <div class="method-item"><h5>ROI formula</h5><p>ROI = Net savings ÷ Total PRIE cost × 100, where Total PRIE cost = PRIE-assisted labor cost + $30,000 annual fee. This is the standard investment ROI formula. The denominator is the <b>total cost of the PRIE solution</b>, not just the subscription fee in isolation.</p></div>
+      <div class="method-item"><h5>Salary &amp; hourly rate</h5><p>Hourly rate = annual compensation ÷ 2,080 hrs (BLS standard: 52 wks × 40 hrs/wk). Bands from BLS OEWS May 2024 [4,5] and CFA Institute 2024 Compensation Study [6]. Band midpoints used in calculations.</p></div>
+      <div class="method-item"><h5>Task scoping</h5><p>Tasks are classified by whether they produce a shared deliverable (IC memo, benchmarking report — counted once per portfolio, not per analyst) or are performed independently by each analyst (filing reviews, surveillance, news monitoring). This prevents double-counting headcount.</p></div>
+      <div class="method-item"><h5>Capacity ceiling</h5><p>An 80% utilisation cap (1,664 hrs/analyst/yr) is applied. If selected tasks imply hours above this cap, all task hours are scaled proportionally. This prevents implausible output at high portfolio volumes.</p></div>
+      <div class="method-item"><h5>PRIE-assisted hours</h5><p>Remaining human time: filings 45 min, IC dossier 1.5 hrs (team total), benchmarking 45 min (team total), surveillance 20 min, news digest 15 min/day. All include analyst review, validation, and sign-off.</p></div>
+      <div class="method-item"><h5>Benchmark sourcing</h5><p>Where published ranges exist, this calculator uses the lower bound (e.g., ODD/IDD: 3–5 hrs → 4 hrs; IC memo: 8–15 hrs → 8 hrs; news: 1.6–1.8 hrs/day → 1.5 hrs/day). Each figure links directly to its source.</p></div>
+    </div>
+    <div class="method-full">
+      <b>Scope note:</b> This model estimates analyst labor cost savings on selected manual research tasks. Risk avoidance value, faster decision-making benefits, and expanded monitoring capacity are shown separately in the Risk &amp; Strategic Value tab and are not included in the headline ROI figure.
+    </div>
+  </div>
+  <button class="method-toggle" id="method-toggle" onclick="toggleMethod()" style="margin-top:4px">
+    <span class="mono upper" id="method-toggle-text">Hide methodology</span>
+    <span id="method-arrow">▲</span>
+  </button>
+
+  <div class="demo">
+    <div class="left">
+      <div class="q">See PRIE run live on a portfolio of your choice — 20 minutes, fully traced IC-ready dossier returned on the call.</div>
+      <div class="ddiv"></div>
+      <div class="body">No setup. No integration. No obligation. We run PRIE on a portfolio manager you choose and return a fully structured, IC-ready dossier on the call.<br/>Email <a href="mailto:ren@diversityeconomics.ai">ren@diversityeconomics.ai</a> to book.</div>
+    </div>
+    <div class="right"><a href="mailto:ren@diversityeconomics.ai" class="btn"><span>Book a</span><span>Demo →</span></a></div>
+  </div>
+  <button class="restart-btn" onclick="restart()">↺ &nbsp;Recalculate with different inputs</button>
+
+</div><!-- /results -->
+
+<footer class="foot mono upper">
+  <p>For qualified investment professionals only. Built for: Portfolio Managers · Asset Managers · RIAs · Multi-Family Offices · Buy-Side · Pension Providers. This model produces indicative labor-cost estimates based on published, independently verifiable industry benchmarks. Results are not a guarantee of savings, investment returns, or specific outcomes. Time and cost recovery will vary by firm size, workflow design, and implementation. All benchmark sources are linked and independently verifiable. This calculator does not constitute financial, legal, or investment advice. Past performance of any referenced methodology is not indicative of future results. © ReN · All rights reserved.</p>
+  <div class="pg">v6 · June 2026</div>
+</footer>
+
+</main>
+</body>
+</html>
