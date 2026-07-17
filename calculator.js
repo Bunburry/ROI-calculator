@@ -1,5 +1,3 @@
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
 // ══════════════════════════════════════════════════
 // CONSTANTS
 // ══════════════════════════════════════════════════
@@ -363,4 +361,3 @@ function buildTable(td, totalManH, totalManC) {
   tfoot.innerHTML = '<td>Total</td><td></td><td class="mc">' + fmtN(Math.round(totalManH)) + ' hrs</td><td>' + fmtM(totalManC) + '</td><td></td><td class="sc">-' + fmtN(Math.round(td.reduce((a, t) => a + t.saved, 0))) + ' hrs</td>';
   tbody.appendChild(tfoot);
 }
-</script>
