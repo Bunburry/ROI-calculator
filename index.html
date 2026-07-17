@@ -10,6 +10,17 @@
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="calculator.js"></script>
+<script>
+function sendHeight() {
+  const height = document.body.scrollHeight;
+  window.parent.postMessage({ type: 'roi-calc-height', height: height }, '*');
+}
+window.addEventListener('load', sendHeight);
+window.addEventListener('resize', sendHeight);
+// Catch height changes from step navigation, results reveal, etc.
+const observer = new MutationObserver(sendHeight);
+observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+</script>
 
 </head>
 <body>
